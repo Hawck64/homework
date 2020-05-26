@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+	<style type="text/css">
+		#myCanvas{
+
+       display: block; 
+       margin: 0 auto;
+       background: #eee;	
+
+		}
+
+
+	</style>
+	<canvas id="myCanvas" height="400" width="880"></canvas>
+	
+<script type="text/javascript">
+
+
+let canvas = document.querySelector("#myCanvas");	
+let ctx = canvas.getContext("2d");
+let snakeLength=4;
+let pointWidth = 12;
+let pointHeight = 12;
+let point = 12;
+let x = canvas.width/2+(snakeLength-1)*5;
+let y = canvas.height/2;
+let rightPressed = false;
+let leftPressed = false;
+let upPressed = false;
+let downPressed = false;
+let pX=12;
+let pY=0;
+let coordsX = [];
+let coordsY = [];
+let flagX=[];
+let flagY=[];
+let randX = Math.round(9.5 + Math.random()*(canvas.width-8));
+let randY = Math.round(9.5 + Math.random()*(canvas.height-8));
+let rX; //для проверки на столкновение с яблоком
+let rY;
+let score = 0;
+let intervalId;
+const rect = canvas.getBoundingClientRect();
+let menuWidth = 100;
+let menuHeight = 30;
+let menuClicked;
+let dx = 2;
+let dy = 0;
+
+
+document.addEventListener("keyup", keyUpHandler, false);
+document.addEventListener("keydown", keyDownHandler, false);
+/*document.addEventListener("mousedown",mouseDownHandler, false);
+
+function mouseDownHandler(e){
+
+let relativeX = e.clientX-rect.left;
+let relativeY = e.clientY-rect.top;
+
+if(relativeX>canvas.width/2-menuWidth/2 && relativeX<canvas.width/2+menuWidth/2 && relativeY<canvas.height/2+10 &&
+relativeY>canvas.height/2-20){
+menuClicked = true;
+ctx.clearRect(0,0,canvas.width,canvas.height);
+start();
+
+}   
+
+if(menuClicked){
+
+canvas.removeEventListener("mousedown", mouseDownHandler, false);
+
+}
+
+}
+*/
+
+
+function keyUpHandler(e){
+
+if(e.key == "Right" || e.key == "ArrowRight"){
+
+rightPressed = false;
+
+}
+
+if(e.key == "Left" || e.key == "ArrowLeft"){
+
+leftPressed = false;
+	
+}
+
+if(e.key == "Up" || e.key == "ArrowUp"){
+
+upPressed = false;	
+
+}
+
+if(e.key == "Down" || e.key == "ArrowDown"){
+
+downPressed = false;
+	
+}
+
+
+}
+
+function keyDownHandler(e){
+
+
+if(e.key == "Right" || e.key == "ArrowRight"){
+
+rightPressed = true;
+
+}
+
+if(e.key == "Left" || e.key == "ArrowLeft"){
+
+leftPressed = true;
+	
+}
+
+if(e.key == "Up" || e.key == "ArrowUp"){
+
+upPressed = true;	
+
+}
+
+if(e.key == "Down" || e.key == "ArrowDown"){
+
+downPressed = true;
+	
+}
+
+}
+
+//установка начальных координат и начало игры
+function start(){
+
+for(let i=snakeLength-1;i>=0;i--){
+
+coordsX[i]=x;
+coordsY[i]=y;
+
+ctx.beginPath();
+ctx.rect(coordsX[i], coordsY[i], pointWidth, pointHeight);
+ctx.fillStyle = "#0C9FC3";
+ctx.fill();
+ctx.closePath();
+
+x-=pX;
+y-=pY;
+
+}
+intervalId = setInterval(move, 250);
+
+}
+
+
+function drawSnake(){ //рисовка змейки
+
+for(let i = snakeLength-1;i>=0;i--){
+
+if(i==0){
+
+coordsX[i]=coordsX[snakeLength-1]+pX; // установка головы с помощью вынесения хвоста наперед
+coordsY[i]=coordsY[snakeLength-1]+pY;
+flagX[snakeLength-1] = coordsX[i];
+flagY[snakeLength-1] = coordsY[i];
+
+
+}else if(i>0){
+
+coordsX[i] = coordsX[i]; // установка координат, совпадающие с предыдущими
+coordsY[i] = coordsY[i];
+flagX[i-1]=coordsX[i];
+flagY[i-1]=coordsY[i];
+
+}
+
+ctx.beginPath();
+ctx.rect(coordsX[i], coordsY[i], pointWidth, pointHeight); // отображение змейки
+ctx.fillStyle = "#0C9FC3";
+ctx.fill();
+ctx.closePath();
+
+} 
+
+for(let j=0;j<snakeLength;j++){
+
+coordsX[j]=flagX[j];
+coordsY[j]=flagY[j];
+
+}
+
+}
+
+//сгенерировать яблоко в случайном месте
+function appleGenerator(){
+
+
+ctx.beginPath();
+ctx.rect(randX, randY, pointWidth, pointHeight);
+ctx.fillStyle = "#FF5733";
+ctx.fill();
+ctx.closePath();
+
+}
+
+// если координаты яблока совпадают с координатой змейки, то изменить координаты яблока
+function onAppleCollision(){
+
+//запоминание начальных координат яблока
+rX = randX;
+rY = randY;
+
+//когда едет вправо или влево
+if(pX!==0){
+
+if(coordsX[snakeLength-1]+point>=randX && coordsX[snakeLength-1]-point<=randX && (coordsY[snakeLength-1]+point>=randY && coordsY[snakeLength-1]-point<=randY)){
+
+randX = Math.round(9.5 + Math.random()*(canvas.width-8));
+randY = Math.round(9.5 + Math.random()*(canvas.height-8));
+
+}
+
+}
+
+//когда едет вверх или вниз
+if(pY!==0){
+
+if(coordsY[snakeLength-1]-point<=randY && coordsY[snakeLength-1]+point>=randY && (coordsX[snakeLength-1]+point>=randX && coordsX[snakeLength-1]-point<=randX)){
+
+randX = Math.round(9.5 + Math.random()*(canvas.width-8));
+randY = Math.round(9.5 + Math.random()*(canvas.height-8));
+
+}
+
+}
+
+
+if(randX!==rX || randY!==rY){
+
+// если координаты яблока изменились, значит змейка с ним столкнулась и надо изменить длину змейки
+
+grow();
+
+}
+
+}
+
+//рост змейки
+function grow(){
+//змейка растет, значит счет увеличивается
+score++;
+snakeLength++;
+//сохранить новые координаты
+for(let i=snakeLength-1;i>=0;i--){
+
+if(i!==0){
+
+coordsX[i]=coordsX[i-1];
+coordsY[i]=coordsY[i-1];
+
+}else{
+
+coordsX[i]=coordsX[i+1]-pX;
+coordsY[i]=coordsY[i+1]-pY;
+
+}
+
+}
+
+}
+
+//в случае, если голова столкнулась с телом, завершить игру
+function onSnakeCollision(){
+
+for(let i=snakeLength-2;i>=0;i--){
+
+if(coordsX[snakeLength-1]==coordsX[i] && coordsY[snakeLength-1]==coordsY[i]){
+
+clearInterval(intervalId);
+ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.font = "50px Arial";
+ctx.fillStyle = "#F54019";
+ctx.textAlign = "center";
+ctx.fillText("Game Over", canvas.width/2, canvas.height/2);
+
+}
+
+}
+
+}
+
+//отображение счета
+function scoreDisplay(){
+
+ctx.font = "20px Arial";
+ctx.fillStyle = "black";
+ctx.textAlign = "right";
+ctx.fillText("score: " + score, canvas.width-50, 30);
+
+}
+
+//рисовка меню и запуск игры
+/*function drawMenu(){
+
+ctx.beginPath();
+ctx.rect(canvas.width/2-50, canvas.height/2-20, menuWidth, menuHeight);
+ctx.fillStyle = "#39BFFA";
+ctx.fill();
+ctx.strokeStyle = "#000000";
+ctx.stroke();
+ctx.beginPath();
+ctx.font = "20px Arial";
+ctx.fillStyle = "#000000";
+ctx.textBaseline = "alphabetic";
+ctx.fillText("start", canvas.width/2-20, canvas.height/2, 50);
+
+}
+
+drawMenu();*/
+
+function move(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+drawSnake();
+moveX();
+moveY();
+scoreDisplay();
+onAppleCollision();
+appleGenerator();
+onSnakeCollision();
+
+if(coordsX[snakeLength-1]>canvas.width){ //если змейка вылазит за границы, то отобразить ее с паралельной стороны
+
+coordsX[snakeLength-1] = 0;
+
+}
+
+if(coordsY[snakeLength-1]<0){
+
+coordsY[snakeLength-1] = canvas.height-1;
+
+}
+
+if(coordsY[snakeLength-1]>canvas.height){
+
+coordsY[snakeLength-1]=0;
+
+}
+
+if(coordsX[snakeLength-1]<0){
+
+coordsX[snakeLength-1]=canvas.width;
+
+}
+
+
+}
+
+function moveX(){ // движ по x
+
+
+if(rightPressed){ 
+
+if(pX!=-point){
+
+pX=point;
+pY=0;
+dx = 2;
+dy = 0;
+
+}
+
+pX=pX;
+pY=pY;
+
+}
+
+if(leftPressed){
+
+if(pX!=point){
+
+pX=-point;
+pY=0;
+dx = -2;
+dy=0;
+
+}
+
+pX=pX;
+pY=pY;
+
+}
+
+
+}
+
+function moveY(){ // движ по y
+
+if(upPressed){
+
+if(pY!=point){
+
+pX=0;
+pY=-point;
+dx=0;
+dy=-2;
+
+}
+
+pX=pX;
+pY=pY;
+
+}
+
+if(downPressed){
+
+if(pY!=-point){
+
+pX=0;
+pY=point;
+dx=0;
+dy=2;
+
+}
+
+pX=pX;
+pY=pY;
+
+}
+
+}
+
+start();
+
+</script>
+</body>
+</html>
